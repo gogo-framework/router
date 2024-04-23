@@ -1,6 +1,6 @@
 # router
 
-This package comes with a nicer to use API for the newly introduced router enhancements in the Go 1.22 release. It adds the following features:
+This package comes with a nicer to use API for the newly introduced routing enhancements in the Go 1.22 release. It adds the following features:
 
 - It allows you to use HTTP methods as functions rather than it being part of the URL path.
 - It allows you to group routes under a common prefix.
@@ -33,39 +33,39 @@ You can add add routes in two ways; Single routes, or grouped routes.
 ```go
 r := router.NewRouter()
 
-r.GET("get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.GET("/get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World!"))
 })
 
-r.POST("post-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.POST("/post-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a post request!"))
 })
 
-r.PUT("put-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.PUT("/put-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a put request!"))
 })
 
-r.PATCH("patch-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.PATCH("/patch-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a patch request!"))
 })
 
-r.DELETE("delete-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.DELETE("/delete-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a delete request!"))
 })
 
-r.OPTIONS("options-endpoint/", func(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("You did a options request!"))
+r.OPTIONS("/options-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("You did an options request!"))
 })
 
-r.HEAD("head-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.HEAD("/head-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a head request!"))
 })
 
-r.CONNECT("connect-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.CONNECT("/connect-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a connect request!"))
 })
 
-r.TRACE("trace-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.TRACE("/trace-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a trace request!"))
 })
 ```
@@ -76,12 +76,11 @@ You can group routes under a common prefix using the `Group` method.
 
 ```go
 r := router.NewRouter()
-r.Group("group/", func(r *router.Router) {
-	r.GET("get/", func(w http.ResponseWriter, r *http.Request) {
+r.Group("/group/", func(rg *router.Router) {
+	rg.GET("get/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	})
-
-	r.POST("post/", func(w http.ResponseWriter, r *http.Request) {
+	rg.POST("post/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a post request!"))
 	})
 })
@@ -96,28 +95,40 @@ You can add middlewares to router itself, single routes and route groups using t
 ```go
 r := router.NewRouter()
 
-// Sample middleware
-XTestHeaderMiddleware := func(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Test", "Hello, World!")
+// Define middleware functions
+XTestGlobalMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Test-Global-Middleware", "This header is set from the global middleware!")
 		next.ServeHTTP(w, r)
-	})
+	}
+}
+XTestSingleHeaderMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Test-Single-Header", "This header is set from the single route middleware!")
+		next.ServeHTTP(w, r)
+	}
+}
+XTestGroupHeaderMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Test-Group-Header", "This header is set from the route group middleware!")
+		next.ServeHTTP(w, r)
+	}
 }
 
 // Adding middleware to the router itself
-r.Use(XTestHeaderMiddleware)
+r.Use(XTestGlobalMiddleware)
 
 // Adding middleware to a single route
-r.GET("get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.GET("/get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World!"))
-}).Use(XTestHeaderMiddleware)
+}).Use(XTestSingleHeaderMiddleware)
 
 // Adding middleware to a route group
-r.Group("group/", func(r *router.Router) {
-	r.GET("get/", func(w http.ResponseWriter, r *http.Request) {
+r.Group("/group/", func(rg *router.Router) {
+	rg.GET("get/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	})
-}).Use(XTestHeaderMiddleware)
+}).Use(XTestGroupHeaderMiddleware)
 ```
 
 ### Improved pattern matching
