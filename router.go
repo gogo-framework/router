@@ -137,10 +137,6 @@ func (r *Router) Use(middleware ...Middleware) {
 }
 
 func (r *Router) SanitizePath(path string) string {
-	if r.config.DisableAutoAddTrailingSlash && r.config.DisableAutoAddExactMatchWildcard {
-		return path
-	}
-
 	for strings.Contains(path, "//") {
 		path = strings.Replace(path, "//", "/", -1)
 	}

@@ -46,8 +46,6 @@ You can add add routes in two ways; Single routes, or grouped routes.
 
 Note: Some routers require adding leading slashes, some don't, some require adding trailing slashes, some don't. With this router, you can do either and the final generated path will be so the Go http package can understand it.
 
-The above behaviour will only be applied if you do not set the `DisableAutoAddExactMatchWildcard` and `DisableAutoAddTrailingSlash` to `true`.
-
 #### Single routes
 
 ```go
