@@ -16,6 +16,22 @@ To create a new router, use the `NewRouter` function.
 r := router.NewRouter()
 ```
 
+### Setting a custom router config
+
+The router by default adds a "{$}" to the end of each route, it also adds a trailing slash to each route. This is done because the behaviour of Go's pattern matching is a bit weird and can result in unexpected behavior. In my opinion, this way it's doing what most people would expect it to do.
+
+However, if you want, you can disable both behavours by setting a custom router config. I'd suggest doing this only if you have worked with the default router (mux) from the standard library and understand the behaviour.
+
+To set a custom router config, use the `SetConfig` method.
+
+```go
+r := router.NewRouter()
+r.SetConfig(router.RouterConfig{
+	DisableAutoAddExactMatchWildcard: true,
+	DisableAutoAddTrailingSlash:      true,
+})
+```
+
 ### Set custom mux to the router
 
 If you want to use a custom mux, you can set it using the `SetMux` method.
@@ -28,44 +44,48 @@ r.SetMux(http.NewServeMux())
 
 You can add add routes in two ways; Single routes, or grouped routes.
 
+Note: Some routers require adding leading slashes, some don't, some require adding trailing slashes, some don't. With this router, you can do either and the final generated path will be so the Go http package can understand it.
+
+The above behaviour will only be applied if you do not set the `DisableAutoAddExactMatchWildcard` and `DisableAutoAddTrailingSlash` to `true`.
+
 #### Single routes
 
 ```go
 r := router.NewRouter()
 
-r.GET("/get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.GET("/get-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World!"))
 })
 
-r.POST("/post-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.POST("/post-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a post request!"))
 })
 
-r.PUT("/put-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.PUT("/put-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a put request!"))
 })
 
-r.PATCH("/patch-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.PATCH("/patch-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a patch request!"))
 })
 
-r.DELETE("/delete-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.DELETE("/delete-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a delete request!"))
 })
 
-r.OPTIONS("/options-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.OPTIONS("/options-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did an options request!"))
 })
 
-r.HEAD("/head-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.HEAD("/head-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a head request!"))
 })
 
-r.CONNECT("/connect-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.CONNECT("/connect-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a connect request!"))
 })
 
-r.TRACE("/trace-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.TRACE("/trace-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("You did a trace request!"))
 })
 ```
@@ -76,17 +96,26 @@ You can group routes under a common prefix using the `Group` method.
 
 ```go
 r := router.NewRouter()
-r.Group("/group/", func(rg *router.Router) {
-	rg.GET("get/", func(w http.ResponseWriter, r *http.Request) {
+r.Group("grouped", func(rg *router.Router) {
+	rg.GET("/get", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	})
-	rg.POST("post/", func(w http.ResponseWriter, r *http.Request) {
+	rg.POST("/post", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("You did a post request!"))
+	})
+})
+
+r.Group("multi/level/group", func(rg *router.Router) {
+	rg.GET("/get", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, World!"))
+	})
+	rg.POST("/post", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a post request!"))
 	})
 })
 ```
 
-The above will create two routes, `/group/get/` and `/group/post/`.
+The above will create the following routes, `/group/get/`, `/group/post/`, `/multi/level/group/get/` and `multi/level/group/get/`.
 
 ### Middlewares
 
@@ -119,13 +148,13 @@ XTestGroupHeaderMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
 r.Use(XTestGlobalMiddleware)
 
 // Adding middleware to a single route
-r.GET("/get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+r.GET("/get-endpoint", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World!"))
 }).Use(XTestSingleHeaderMiddleware)
 
 // Adding middleware to a route group
-r.Group("/group/", func(rg *router.Router) {
-	rg.GET("get/", func(w http.ResponseWriter, r *http.Request) {
+r.Group("group", func(rg *router.Router) {
+	rg.GET("/get", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	})
 }).Use(XTestGroupHeaderMiddleware)

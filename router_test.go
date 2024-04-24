@@ -13,31 +13,39 @@ func TestReadmeSingleRoutes(t *testing.T) {
 	r := router.NewRouter()
 
 	// Register routes for each HTTP method
-	r.GET("/get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+	r.GET("/get-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	})
-	r.POST("/post-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.POST("/post-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a post request!"))
 	})
-	r.PUT("/put-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.PUT("/put-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a put request!"))
 	})
-	r.PATCH("/patch-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.PATCH("/patch-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a patch request!"))
 	})
-	r.DELETE("/delete-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.DELETE("/delete-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a delete request!"))
 	})
-	r.OPTIONS("/options-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.OPTIONS("/options-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did an options request!"))
 	})
-	r.HEAD("/head-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.HEAD("/head-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a head request!"))
 	})
-	r.CONNECT("/connect-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.CONNECT("/connect-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a connect request!"))
 	})
-	r.TRACE("/trace-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+
+	r.TRACE("/trace-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You did a trace request!"))
 	})
 
@@ -92,11 +100,20 @@ func TestReadmeRouteGroups(t *testing.T) {
 	r := router.NewRouter()
 
 	// Define the route group
-	r.Group("/group/", func(rg *router.Router) {
-		rg.GET("get/", func(w http.ResponseWriter, r *http.Request) {
+	r.Group("grouped", func(rg *router.Router) {
+		rg.GET("/get", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Hello, World!"))
 		})
-		rg.POST("post/", func(w http.ResponseWriter, r *http.Request) {
+		rg.POST("/post", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("You did a post request!"))
+		})
+	})
+
+	r.Group("multi/level/group", func(rg *router.Router) {
+		rg.GET("/get", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Hello, World!"))
+		})
+		rg.POST("/post", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("You did a post request!"))
 		})
 	})
@@ -108,8 +125,10 @@ func TestReadmeRouteGroups(t *testing.T) {
 		statusCode int
 		response   string
 	}{
-		{http.MethodGet, "/group/get/", http.StatusOK, "Hello, World!"},
-		{http.MethodPost, "/group/post/", http.StatusOK, "You did a post request!"},
+		{http.MethodGet, "/grouped/get/", http.StatusOK, "Hello, World!"},
+		{http.MethodPost, "/grouped/post/", http.StatusOK, "You did a post request!"},
+		{http.MethodGet, "/multi/level/group/get/", http.StatusOK, "Hello, World!"},
+		{http.MethodPost, "/multi/level/group/post/", http.StatusOK, "You did a post request!"},
 	}
 
 	// Iterate over test cases
@@ -168,13 +187,13 @@ func TestReadmeMiddleware(t *testing.T) {
 	r.Use(XTestGlobalMiddleware)
 
 	// Adding middleware to a single route
-	r.GET("/get-endpoint/", func(w http.ResponseWriter, r *http.Request) {
+	r.GET("/get-endpoint", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	}).Use(XTestSingleHeaderMiddleware)
 
 	// Adding middleware to a route group
-	r.Group("/group/", func(rg *router.Router) {
-		rg.GET("get/", func(w http.ResponseWriter, r *http.Request) {
+	r.Group("group", func(rg *router.Router) {
+		rg.GET("/get", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Hello, World!"))
 		})
 	}).Use(XTestGroupHeaderMiddleware)
