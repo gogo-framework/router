@@ -18,7 +18,7 @@ r := router.NewRouter()
 
 ### Setting a custom router config
 
-The router by default adds a "{$}" to the end of each route, it also adds a trailing slash to each route. This is done because the behaviour of Go's pattern matching is a bit weird and can result in unexpected behavior. In my opinion, this way it's doing what most people would expect it to do.
+The router by default adds a "{$}" to the end of each route, it also adds a trailing slash to each route. This is done because the behaviour of Go's pattern matching is a bit weird ([read about it here](https://pkg.go.dev/net/http#ServeMux)) and can result in unexpected behavior. In my opinion, this way it's doing what most people would expect it to do.
 
 However, if you want, you can disable both behavours by setting a custom router config. I'd suggest doing this only if you have worked with the default router (mux) from the standard library and understand the behaviour.
 
@@ -157,10 +157,6 @@ r.Group("group", func(rg *router.Router) {
 	})
 }).Use(XTestGroupHeaderMiddleware)
 ```
-
-### Improved pattern matching
-
-This is a todo, but the default pattern matching is quite strange and can result in unexpected behavior. See [this](https://pkg.go.dev/net/http#ServeMux) for more information. I'll probably have some settings added to the router to allow for more control over the pattern matching, but I'll need to do some research on how other routers do this.
 
 ## Things I'd like to add
 
